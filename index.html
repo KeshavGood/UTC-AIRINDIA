@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UTC ↔ IST Time Converter</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+    <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="UTC-IST" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="min-h-screen relative antialiased selection:bg-sky-100 selection:text-sky-900">
+  <!-- Full-bleed Live Animated Alpine Day/Sunset/Aurora-Night Canvas Background -->
+  <canvas id="sky-canvas" class="fixed inset-0 w-full h-full -z-20 pointer-events-none select-none"></canvas>
+  <div class="fixed inset-0 -z-10 bg-gradient-to-b from-slate-950/15 via-transparent to-slate-950/30 pointer-events-none"></div>
+
+  <div class="relative z-10 max-w-4xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-5">
+    <!-- Top Header & Controls -->
+    <header class="glass-header rounded-3xl px-4 py-3.5 sm:px-5 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-sky-500/30 shrink-0">
+          <i data-lucide="clock" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white drop-shadow-sm">UTC ↔ IST Time Converter</h1>
+          <p class="text-xs sm:text-sm text-sky-100/90">Fixed offset: <span class="font-semibold text-white">IST = UTC + 5h 30m</span> (No DST)</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 self-start sm:self-auto">
+        <button id="btn-sync-now" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.98] transition shadow-sm">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+          <span>Now</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Live Clocks Strip -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 gap-3" aria-label="Live clocks">
+      <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider bg-white/80 text-slate-800">UTC / Zulu</span>
+            <span class="adaptive-muted text-xs text-slate-600">UTC+00:00</span>
+          </div>
+          <div id="live-utc-time" class="adaptive-title font-mono-num text-2xl sm:text-3xl font-bold text-slate-900 mt-1.5">--:--:--</div>
+          <div id="live-utc-date" class="adaptive-muted text-xs text-slate-600 mt-0.5">Loading...</div>
+        </div>
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" title="Live"></span>
+      </div>
+
+      <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider bg-blue-100/90 text-blue-800">IST (India)</span>
+            <span class="adaptive-muted text-xs text-slate-600">UTC+05:30</span>
+          </div>
+          <div id="live-ist-time" class="adaptive-accent font-mono-num text-2xl sm:text-3xl font-bold text-blue-700 mt-1.5">--:--:--</div>
+          <div id="live-ist-date" class="adaptive-muted text-xs text-slate-600 mt-0.5">Loading...</div>
+        </div>
+        <span class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" title="Live"></span>
+      </div>
+    </section>
+
+    <!-- Primary Converter Card -->
+    <section class="glass-card rounded-3xl overflow-hidden">
+      <!-- Direction Header -->
+      <div class="px-5 py-4 bg-transparent border-b border-white/15 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+          <span id="badge-from" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900/90 text-white">UTC</span>
+          <i data-lucide="arrow-right" class="adaptive-muted w-4 h-4 text-slate-600"></i>
+          <span id="badge-to" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white">IST</span>
+          <span id="direction-hint" class="adaptive-muted text-xs text-slate-700 hidden sm:inline">Adding 5 hours 30 minutes</span>
+        </div>
+        <button id="btn-swap" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/40 bg-white/80 text-xs font-semibold text-slate-800 hover:bg-white active:scale-[0.98] transition shadow-sm">
+          <i data-lucide="arrow-left-right" class="w-3.5 h-3.5 text-blue-600"></i>
+          <span>Swap Direction</span>
+        </button>
+      </div>
+
+      <div class="p-5 sm:p-6 space-y-6">
+        <!-- Input + Output Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch">
+          <!-- Input Panel -->
+          <div class="md:col-span-6 space-y-4">
+            <!-- Date & Time Tabs (Both Clearly Above Quick Type) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="glass-subcard rounded-2xl p-3">
+                <label for="input-date" id="input-date-label" class="adaptive-label block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1.5">Date (UTC)</label>
+                <input
+                  id="input-date"
+                  type="date"
+                  class="w-full font-mono-num text-sm px-3 py-2 rounded-xl border border-white/40 bg-white/80 text-slate-900 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+                />
+              </div>
+              <div class="glass-subcard rounded-2xl p-3">
+                <label for="input-hour" id="input-time-label" class="adaptive-label block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1.5">Time 24h (UTC)</label>
+                <div class="grid grid-cols-2 gap-1.5">
+                  <select id="input-hour" aria-label="Hour" class="w-full font-mono-num text-sm px-2.5 py-2 rounded-xl border border-white/40 bg-white/80 text-slate-900 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"></select>
+                  <select id="input-minute" aria-label="Minute" class="w-full font-mono-num text-sm px-2.5 py-2 rounded-xl border border-white/40 bg-white/80 text-slate-900 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"></select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Animated Aesthetic Quick Type Card -->
+            <div class="quick-type-shell">
+              <div class="quick-type-inner p-3.5 sm:p-4">
+                <div class="quick-type-orb"></div>
+                <div class="relative z-10">
+                  <div class="flex items-center justify-between mb-2">
+                    <label for="quick-input" id="quick-input-label" class="adaptive-label inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-indigo-800">
+                      <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+                      <span>Quick Type (UTC)</span>
+                    </label>
+                  </div>
+                  <div class="relative flex items-center">
+                    <i data-lucide="zap" class="w-4 h-4 text-blue-500 absolute left-3 pointer-events-none"></i>
+                    <input
+                      id="quick-input"
+                      type="text"
+                      placeholder="14:30, 1430Z, 09:05"
+                      class="w-full font-mono-num text-sm pl-9 pr-20 py-2.5 rounded-xl border border-indigo-200/90 bg-white/90 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition shadow-sm"
+                    />
+                    <button id="btn-parse-quick" type="button" class="btn-shine absolute right-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 active:scale-[0.97] transition shadow-sm">Apply</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Output Panel -->
+          <div class="md:col-span-6 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 text-white p-5 flex flex-col justify-between shadow-inner">
+            <div>
+              <div class="flex items-center justify-between gap-2">
+                <span id="output-zone-label" class="text-xs font-semibold uppercase tracking-wider text-blue-300">Converted IST Time</span>
+                <span id="day-shift-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">Same Day</span>
+              </div>
+
+              <div id="output-time-main" class="font-mono-num text-4xl sm:text-5xl font-bold tracking-tight mt-3 text-white">--:--</div>
+              <div id="output-date-full" class="text-sm text-slate-300 mt-2 font-medium">--</div>
+            </div>
+
+            <div class="mt-5 pt-4 border-t border-white/10 flex items-center">
+              <button id="btn-copy-result" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white transition">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span>Copy</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simple Time Slider -->
+        <div class="pt-3 border-t border-white/25">
+          <div class="flex items-center justify-between text-xs mb-2">
+            <span class="adaptive-muted font-medium text-slate-700">Time Slider</span>
+            <span id="slider-readout" class="adaptive-title font-mono-num font-semibold text-slate-900">--</span>
+          </div>
+          <input id="time-slider" type="range" min="0" max="1439" step="1" value="0" class="w-full time-slider" aria-label="Time slider" />
+          <div class="adaptive-muted flex justify-between text-[11px] font-mono-num text-slate-600 mt-1.5">
+            <span>00:00</span>
+            <span>06:00</span>
+            <span>12:00</span>
+            <span>18:00</span>
+            <span>23:59</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 pointer-events-none flex flex-col gap-2"></div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
