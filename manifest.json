@@ -1,7 +1,7 @@
 {
   "id": "utc-ist-converter",
   "name": "UTC \u2194 IST Time Converter",
-  "short_name": "UTC-IST",
+  "short_name": "KESHAV-UTC-IST",
   "description": "24-hour UTC to IST time converter with live dual clocks, quick-type parser, and animated day/night alpine sky.",
   "start_url": "./",
   "scope": "./",
