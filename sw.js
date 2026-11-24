@@ -1,4 +1,4 @@
-const CACHE_NAME = 'utc-ist-converter-v5';
+const CACHE_NAME = 'utc-ist-converter-v6';
 const APP_SHELL = [
   './',
   './index.html',

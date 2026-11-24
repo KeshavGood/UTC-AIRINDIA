@@ -28,5 +28,21 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "UTC to IST Time Converter on Desktop"
+    },
+    {
+      "src": "screenshot-mobile.png",
+      "sizes": "540x960",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "UTC to IST Time Converter on Mobile"
+    }
   ]
 }
